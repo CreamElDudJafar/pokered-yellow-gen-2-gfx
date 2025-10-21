@@ -133,11 +133,11 @@ SAVGoodChecksum:
 	ld [rRAMG], a
 	ret
 
-LoadSAVIgnoreBadCheckSum:
+;LoadSAVIgnoreBadCheckSum:
 ; unused function that loads save data and ignores bad checksums
-	call LoadSAV0
-	call LoadSAV1
-	jp LoadSAV2
+;	call LoadSAV0
+;	call LoadSAV1
+;	jp LoadSAV2
 
 SaveSAV:
 	farcall PrintSaveScreenText
@@ -440,7 +440,7 @@ DisplayChangeBoxMenu:
 	hlcoord 0, 0
 	ld b, 2
 	ld c, 9
-	call PCBoxPal
+	callfar SendPokeballPal
 	ld hl, ChooseABoxText
 	call PrintText
 	hlcoord 11, 0
