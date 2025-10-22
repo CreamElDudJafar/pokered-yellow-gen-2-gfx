@@ -404,7 +404,8 @@ wNPCMovementDirections:: ds 180
 NEXTU
 wDexRatingNumMonsSeen:: db
 wDexRatingNumMonsOwned:: db
-wDexRatingText:: db
+wDexRatingText::
+wTrainerCardBadgeAttributes:: db
 
 NEXTU
 ; If a random number greater than this value is generated, then the player is
@@ -533,7 +534,13 @@ wLowHealthAlarmDisabled:: db
 
 wPlayerMonMinimized:: db
 
-	ds 13
+	ds 2
+
+wEXPBarPixelLength::  ds 1
+wEXPBarBaseEXP::      ds 3
+wEXPBarCurEXP::       ds 3
+wEXPBarNeededEXP::    ds 3
+wEXPBarKeepFullFlag:: ds 1
 
 UNION
 ; the amount of damage accumulated by the enemy while biding
@@ -1054,10 +1061,7 @@ wNPCMovementScriptSpriteOffset:: db
 
 wScriptedNPCWalkCounter:: db
 
-	ds 1
-
-; always 0 since full CGB support was not implemented
-wOnCGB:: db
+	ds 2
 
 ; if running on SGB, it's 1, else it's 0
 wOnSGB:: db
@@ -1090,7 +1094,10 @@ wPalPacket::
 
 ; This union spans 49 bytes.
 UNION
-wPartyMenuBlkPacket:: ds $30
+wPartyMenuBlkPacket:: ; ds $30 bytes
+	ds 9
+wPartyHPBarAttributes::
+	ds 20
 
 NEXTU
 	ds 29
@@ -2279,17 +2286,22 @@ wBoxMonNicksEnd::
 
 wBoxDataEnd::
 
-wEXPBarPixelLength::  ds 1
-wEXPBarBaseEXP::      ds 3
-wEXPBarCurEXP::       ds 3
-wEXPBarNeededEXP::    ds 3
-wEXPBarKeepFullFlag:: ds 1
+
+SECTION "CGB Palette Data", WRAM0
+
+wCGBBasePalPointers:: ds NUM_ACTIVE_PALS * 2 ; 8 bytes
+wCGBPal:: ds PAL_SIZE ; 8 bytes
+wLastBGP::db
+wLastOBP0::db
+wLastOBP1::db 
+wBGPPalsBuffer:: ds (NUM_ACTIVE_PALS + 1) * PAL_SIZE ; 32 bytes
+wdef4:: db
 
 
 SECTION "Stack", WRAM0
 
 ; the stack grows downward
-	ds $100 - 1
+	ds $e2 - 1
 wStack:: db
 
 ENDSECTION

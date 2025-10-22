@@ -39,20 +39,6 @@ INCLUDE "engine/menus/players_pc.asm"
 INCLUDE "engine/pokemon/remove_mon.asm"
 INCLUDE "engine/events/display_pokedex.asm"
 
-GetNidoPalID:
-	ld a, PAL_NIDORINO
-	jr GotPaletteID
-GetRedPalID:
-	call ClearScreen
-	ld a, PAL_HERO
-	jr GotPaletteID
-GetRivalPalID:
-	call ClearScreen
-	ld a, PAL_GARY1
-GotPaletteID:
-	push af
-	jpfar SendIntroPal
-
 
 SECTION "bank3", ROMX
 
@@ -112,9 +98,6 @@ INCLUDE "engine/battle/move_effects/haze.asm"
 INCLUDE "engine/battle/get_trainer_name.asm"
 INCLUDE "engine/math/random.asm"
 
-EXPBarGraphics::  INCBIN "gfx/exp_bar.2bpp"
-EXPBarGraphicsEnd::
-
 
 SECTION "Battle Engine 2", ROMX
 
@@ -160,14 +143,6 @@ INCLUDE "engine/events/hidden_objects/oaks_lab_email.asm"
 SECTION "Bill's PC", ROMX
 
 INCLUDE "engine/pokemon/bills_pc.asm"
-
-
-;SECTION "Bill's PC 2", ROMX
-
-PCBoxOWPal::
-	call Delay3
-	ld b, SET_PAL_OVERWORLD
-	jp RunPaletteCommand
 
 
 SECTION "Battle Engine 3", ROMX
@@ -223,39 +198,6 @@ INCLUDE "engine/battle/move_effects/heal.asm"
 INCLUDE "engine/battle/move_effects/transform.asm"
 INCLUDE "engine/battle/move_effects/reflect_light_screen.asm"
 
-PlayerPartyUpdated:
-	ld hl, PartyTileMap
-	jp PartyUpdateDone
-
-PartyTileMap:
-	db $73, $75, $6F
-
-EnemyHealthBarUpdated:
-	ld [hl], $72
-	ld a, [wIsInBattle]
-	dec a
-	jr  nz, .noBattle
-	push hl
-	ld a, [wEnemyMonSpecies2]
-	ld [wPokedexNum], a
-	callfar IndexToPokedex
-	ld a, [wPokedexNum]
-	dec a
-	ld c, a
-	ld b, $2
-	ld hl, wPokedexOwned
-	predef FlagActionPredef
-	ld a, c
-	and a
-	jr z, .notOwned
-	hlcoord 1, 1
-	ld [hl], $E9
-.notOwned
-	pop hl
-.noBattle
-	ld de, $0001
-	jp HealthBarUpdateDone
-
 
 SECTION "Battle Core", ROMX
 
@@ -286,208 +228,6 @@ PrintGenderCommon: ; used by both routines
 	ld a, [wPokedexNum]
 	ret
 
-LoadBackSpriteUnzoomed:
-	ld a, $66
-	ld de, vBackPic
-	push de
-	jp LoadUncompressedBackSprite
-
-PrintEXPBarAt1711:
-	coord de, 17, 11
-PrintEXPBar:
-	push de
-	call CalcEXPBarPixelLength
-	ldh a, [hQuotient + 3] ; pixel length
-	ld [wEXPBarPixelLength], a
-	ld b, a
-	ld c, $08
-	ld d, $08
-	pop hl
-.loop
-	ld a, b
-	sub c
-	jr nc, .skip
-	ld c, b
-	jr .loop
-.skip
-	ld b, a
-	ld a, $c0
-	add c
-.loop2
-	ld [hld], a
-	dec d
-	ret z
-	ld a, b
-	and a
-	jr nz, .loop
-	ld a, $c0
-	jr .loop2
-
-CalcEXPBarPixelLength:
-	ld hl, wEXPBarKeepFullFlag
-	bit 0, [hl]
-	jr z, .start
-	res 0, [hl]
-	ld a, $40
-	ldh [hQuotient + 3], a
-	ret
-
-.start
-	ld hl, wStatusFlags2
-	bit BIT_NO_AUDIO_FADE_OUT, [hl]
-	jr z, .isBattleScreen
-	ld hl, wLoadedMonSpecies
-	jr .skip
-.isBattleScreen
-	; get the base exp needed for the current level
-	ld a, [wPlayerBattleStatus3]
-	ld hl, wBattleMonSpecies
-	bit 3, a ; Check if transformed
-	jr z, .skip
-	ld hl, wPartyMon1
-	call BattleMonPartyAttr
-.skip
-	ld a, [hl]
-	ld [wCurSpecies], a
-	call GetMonHeader
-	ld a, [wBattleMonLevel]
-	ld d, a
-	callfar CalcExperience
-	ld hl, hMultiplicand
-	ld de, wEXPBarBaseEXP
-	ld a, [hli]
-	ld [de], a
-	inc de
-	ld a, [hli]
-	ld [de], a
-	inc de
-	ld a, [hl]
-	ld [de], a
-
-	; get the exp needed to gain a level
-	ld a, [wBattleMonLevel]
-	ld d, a
-	inc d
-	callfar CalcExperience
-
-	; get the address of the active Pokemon's current experience
-	ld hl, wStatusFlags2
-	bit BIT_NO_AUDIO_FADE_OUT, [hl]
-	jr z, .isBattleScreen2
-	ld hl, wLoadedMonExp
-	jr .skip2
-.isBattleScreen2
-	ld hl, wPartyMon1Exp
-	call BattleMonPartyAttr
-
-.skip2
-	; current exp - base exp
-	ld b, h
-	ld c, l
-	ld hl, wEXPBarBaseEXP
-	ld de, wEXPBarCurEXP
-	call SubThreeByteNum
-
-	; exp needed - base exp
-	ld bc, hMultiplicand
-	ld hl, wEXPBarBaseEXP
-	ld de, wEXPBarNeededEXP
-	call SubThreeByteNum
-
-	; make the divisor an 8-bit number
-	ld hl, wEXPBarNeededEXP
-	ld de, wEXPBarCurEXP + 1
-	ld a, [hli]
-	and a
-	jr z, .twoBytes
-	ld a, [hli]
-	ld [hld], a
-	dec hl
-	ld a, [hli]
-	ld [hld], a
-	ld a, [de]
-	inc de
-	ld [de], a
-	dec de
-	dec de
-	ld a, [de]
-	inc de
-	ld [de], a
-	dec de
-	xor a
-	ld [hli], a
-	ld [de], a
-	inc de
-.twoBytes
-	ld a, [hl]
-	and a
-	jr z, .oneByte
-	srl a
-	ld [hli], a
-	ld a, [hl]
-	rr a
-	ld [hld], a
-	ld a, [de]
-	srl a
-	ld [de], a
-	inc de
-	ld a, [de]
-	rr a
-	ld [de], a
-	dec de
-	jr .twoBytes
-.oneByte
-
-	; current exp * (8 tiles * 8 pixels)
-	ld hl, hMultiplicand
-	ld de, wEXPBarCurEXP
-	ld a, [de]
-	inc de
-	ld [hli], a
-	ld a, [de]
-	inc de
-	ld [hli], a
-	ld a, [de]
-	ld [hl], a
-	ld a, $40
-	ldh [hMultiplier], a
-	call Multiply
-
-	; product / needed exp = pixel length
-	ld a, [wEXPBarNeededEXP + 2]
-	ldh [hDivisor], a
-	ld b, $04
-	jp Divide
-
-; calculates the three byte number starting at [bc]
-; minus the three byte number starting at [hl]
-; and stores it into the three bytes starting at [de]
-; assumes that [hl] is smaller than [bc]
-SubThreeByteNum:
-	call .subByte
-	call .subByte
-.subByte
-	ld a, [bc]
-	inc bc
-	sub [hl]
-	inc hl
-	ld [de], a
-	jr nc, .noCarry
-	dec de
-	ld a, [de]
-	dec a
-	ld [de], a
-	inc de
-.noCarry
-	inc de
-	ret
-
-; return the address of the BattleMon's party struct attribute in hl
-BattleMonPartyAttr:
-	ld a, [wPlayerMonNumber]
-	ld bc, wPartyMon2 - wPartyMon1
-	jp AddNTimes
-
 
 SECTION "bank10", ROMX
 
@@ -495,10 +235,6 @@ INCLUDE "engine/menus/pokedex.asm"
 INCLUDE "engine/movie/trade.asm"
 INCLUDE "engine/movie/intro.asm"
 INCLUDE "engine/movie/trade2.asm"
-
-DexPalBankswitch:
-	ld hl, SendDexPal
-	jp Bankswitch
 
 
 SECTION "Pokédex Rating", ROMX
@@ -536,17 +272,11 @@ INCLUDE "engine/events/hidden_objects/school_notebooks.asm"
 INCLUDE "engine/events/hidden_objects/fighting_dojo.asm"
 INCLUDE "engine/events/hidden_objects/indigo_plateau_hq.asm"
 
-HealthBarPal:
-	ld a, HP_BAR_RED
-	ld hl, wPlayerHPBarColor
-	ld [hli], a ; wPlayerHPBarColor
-	ld [hl], a ; wEnemyHPBarColor
-	ret
-
 
 SECTION "Battle Engine 9", ROMX
 
 INCLUDE "engine/battle/experience.asm"
+INCLUDE "engine/gfx/exp_bar.asm"
 
 
 SECTION "Diploma", ROMX
@@ -557,76 +287,6 @@ INCLUDE "engine/events/diploma.asm"
 SECTION "Trainer Sight", ROMX
 
 INCLUDE "engine/overworld/trainer_sight.asm"
-
-AnimateEXPBarAgain:
-	call LoadMonData
-	call IsCurrentMonBattleMon
-	ret nz
-	xor a
-	ld [wEXPBarPixelLength], a
-	hlcoord 17, 11
-	ld a, $c0
-	ld c, $08
-.loop
-	ld [hld], a
-	dec c
-	jr nz, .loop
-AnimateEXPBar:
-	call LoadMonData
-	call IsCurrentMonBattleMon
-	ret nz
-	ld a, SFX_HEAL_HP
-	call PlaySoundWaitForCurrent
-	callfar CalcEXPBarPixelLength
-	ld hl, wEXPBarPixelLength
-	ld a, [hl]
-	ld b, a
-	ldh a, [hQuotient + 3]
-	ld [hl], a
-	sub b
-	jr z, .done
-	ld b, a
-	ld c, $08
-	hlcoord 17, 11
-.loop1
-	ld a, [hl]
-	cp $c8
-	jr nz, .loop2
-	dec hl
-	dec c
-	jr z, .done
-	jr .loop1
-.loop2
-	inc a
-	ld [hl], a
-	call DelayFrame
-	dec b
-	jr z, .done
-	jr .loop1
-.done
-	ld bc, $08
-	hlcoord 10, 11
-	ld de, wTileMapBackup + 10 + 11 * 20
-	call CopyData
-	ld c, $20
-	jp DelayFrames
-
-KeepEXPBarFull:
-	call IsCurrentMonBattleMon
-	ret nz
-	ld a, [wEXPBarKeepFullFlag]
-	set 0, a
-	ld [wEXPBarKeepFullFlag], a
-	ld a, [wCurEnemyLevel]
-	ret
-
-IsCurrentMonBattleMon:
-	ld a, [wPlayerMonNumber]
-	ld b, a
-	ld a, [wWhichPokemon]
-	cp b
-	ret
-
 
 
 SECTION "Battle Engine 10", ROMX
@@ -677,15 +337,12 @@ INCLUDE "gfx/version.asm"
 
 SECTION "bank1C", ROMX
 
-INCLUDE "engine/movie/splash.asm"
-INCLUDE "engine/movie/hall_of_fame.asm"
 INCLUDE "engine/overworld/healing_machine.asm"
 INCLUDE "engine/overworld/player_animations.asm"
 INCLUDE "engine/battle/ghost_marowak_anim.asm"
 INCLUDE "engine/battle/battle_transitions.asm"
 INCLUDE "engine/items/town_map.asm"
 INCLUDE "engine/gfx/mon_icons.asm"
-INCLUDE "engine/events/in_game_trades.asm"
 INCLUDE "engine/gfx/palettes.asm"
 INCLUDE "engine/menus/save.asm"
 
@@ -695,11 +352,13 @@ SECTION "Itemfinder 1", ROMX
 INCLUDE "engine/movie/credits.asm"
 INCLUDE "engine/pokemon/status_ailments.asm"
 INCLUDE "engine/items/itemfinder.asm"
+INCLUDE "engine/events/in_game_trades.asm"
 
 
 SECTION "Vending Machine", ROMX
 
 INCLUDE "engine/events/vending_machine.asm"
+INCLUDE "engine/pokemon/calc_stats.asm"
 
 
 SECTION "Itemfinder 2", ROMX
@@ -722,7 +381,7 @@ INCLUDE "engine/overworld/elevator.asm"
 INCLUDE "engine/items/tm_prices.asm"
 
 
-SECTION "bank2D", ROMX, BANK[$2D]
+SECTION "bank2D", ROMX
 
 SeadraPicFront::      INCBIN "gfx/pokemon/front/seadra.pic"
 SeadraPicBack::       INCBIN "gfx/pokemon/back/seadrab.pic"
@@ -776,7 +435,7 @@ KabutopsPicFront::    INCBIN "gfx/pokemon/front/kabutops.pic"
 KabutopsPicBack::     INCBIN "gfx/pokemon/back/kabutopsb.pic"
 
 
-SECTION "bank2E", ROMX, BANK[$2E]
+SECTION "bank2E", ROMX
 
 AerodactylPicFront::  INCBIN "gfx/pokemon/front/aerodactyl.pic"
 AerodactylPicBack::   INCBIN "gfx/pokemon/back/aerodactylb.pic"
@@ -800,7 +459,22 @@ MewPicFront::         INCBIN "gfx/pokemon/front/mew.pic"
 MewPicBack::          INCBIN "gfx/pokemon/back/mewb.pic"
 
 
-SECTION "bank2F", ROMX, BANK[$2F]
+SECTION "bank2F", ROMX 
 
 INCLUDE "data/sgb/sgb_palettes.asm"
 INCLUDE "engine/mon_gender.asm"
+
+
+SECTION "Splash Animation", ROMX
+
+; moved from bank1C
+INCLUDE "engine/movie/splash.asm"
+INCLUDE "engine/movie/hall_of_fame.asm"
+
+
+SECTION "CGB Mode Code", ROMX
+
+INCLUDE "data/sgb/bg_map_attributes.asm"
+INCLUDE "engine/gfx/bg_map_attributes.asm"
+INCLUDE "engine/cgb/cgb_cpu_speed.asm"
+INCLUDE "engine/gfx/scroll_gfx_horizontally.asm"

@@ -40,6 +40,7 @@ PrepareOakSpeech:
 	jp CopyData
 
 OakSpeech:
+	callfar CGBSetCPU1xSpeed
 	ld a, SFX_STOP_ALL_MUSIC
 	call PlaySound
 	ld a, 0 ; BANK(Music_Routes2)
@@ -50,6 +51,7 @@ OakSpeech:
 	call LoadTextBoxTilePatterns
 	call PrepareOakSpeech
 	predef InitPlayerData2
+	call RunDefaultPaletteCommand
 	ld hl, wNumBoxItems
 	ld a, POTION
 	ld [wCurItem], a
@@ -61,8 +63,7 @@ OakSpeech:
 	call PrepareForSpecialWarp
 	xor a
 	ldh [hTileAnimations], a
-	ld a, PAL_OAK
-	call GotPaletteID
+	farcall SendOakPal
 	ld de, ProfOakPic
 	lb bc, BANK(ProfOakPic), $00
 	call IntroDisplayPicCenteredOrUpperRight
@@ -71,7 +72,7 @@ OakSpeech:
 	call PrintText
 	call GBFadeOutToWhite
 	call ClearScreen
-	call GetNidoPalID
+	farcall SendNidoPal
 	ld a, NIDORINO
 	ld [wCurSpecies], a
 	ld [wCurPartySpecies], a
@@ -82,7 +83,8 @@ OakSpeech:
 	ld hl, OakSpeechText2
 	call PrintText
 	call GBFadeOutToWhite
-	call GetRedPalID
+	call ClearScreen
+	farcall SendPlayerPal
 	ld de, RedPicFront
 	lb bc, BANK(RedPicFront), $00
 	call IntroDisplayPicCenteredOrUpperRight
@@ -91,7 +93,8 @@ OakSpeech:
 	call PrintText
 	call ChoosePlayerName
 	call GBFadeOutToWhite
-	call GetRivalPalID
+	farcall SendRivalPal
+	call ClearScreen
 	ld de, Rival1Pic
 	lb bc, BANK(Rival1Pic), $00
 	call IntroDisplayPicCenteredOrUpperRight
@@ -101,7 +104,8 @@ OakSpeech:
 	call ChooseRivalName
 .skipSpeech
 	call GBFadeOutToWhite
-	call GetRedPalID
+	call ClearScreen
+	farcall SendPlayerPal
 	ld de, RedPicFront
 	lb bc, BANK(RedPicFront), $00
 	call IntroDisplayPicCenteredOrUpperRight
@@ -186,6 +190,7 @@ FadeInIntroPic:
 .next
 	ld a, [hli]
 	ldh [rBGP], a
+	call UpdateCGBPal_BGP
 	ld c, 10
 	call DelayFrames
 	dec b
@@ -204,9 +209,10 @@ MovePicLeft:
 	ld a, 119
 	ldh [rWX], a
 	call DelayFrame
-
+	
 	ld a, %11100100
 	ldh [rBGP], a
+	call UpdateCGBPal_BGP
 .next
 	call DelayFrame
 	ldh a, [rWX]

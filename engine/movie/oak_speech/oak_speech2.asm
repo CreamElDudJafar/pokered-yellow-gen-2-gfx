@@ -18,7 +18,8 @@ ChoosePlayerName:
 	ld a, [wStringBuffer]
 	cp "@"
 	jr z, .customName
-	call GetRedPalID
+	call ClearScreen
+	farcall SendPlayerPal
 	call Delay3
 	ld de, RedPicFront
 	ld b, BANK(RedPicFront)
@@ -51,7 +52,8 @@ ChooseRivalName:
 	ld a, [wStringBuffer]
 	cp "@"
 	jr z, .customName
-	call GetRivalPalID
+	call ClearScreen
+	farcall SendRivalPal
 	call Delay3
 	ld de, Rival1Pic
 	ld b, BANK(Rival1Pic)
