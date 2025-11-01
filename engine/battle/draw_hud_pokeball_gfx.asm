@@ -223,7 +223,8 @@ SetupPlayerAndEnemyPokeballs:
 	ld [hli], a
 	ld [hl], $68
 	ld a, $1
-	ld [wdef4], a
+;	ld [wdef4], a
+	xor a ;gbcnote - make the enemy pokeballs use the same color register as the player
 	ld hl, wShadowOAMSprite06
 	jp WritePokeballOAMData
 
