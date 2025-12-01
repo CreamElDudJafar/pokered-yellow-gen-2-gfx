@@ -133,8 +133,16 @@ GetHealthBarColor::
 Func_3082:: ; added from pokeyellow - update audio so it doesn't "lag"
 	ldh a, [hLoadedROMBank]
 	push af
-	farcall FadeOutAudio
-	callbs Music_DoLowHealthAlarm
-	callbs Audio1_UpdateMusic
+
+	call UpdateSound
+;	call FadeOutAudio
+;	ld a, BANK(Music_DoLowHealthAlarm)
+;	call BankswitchCommon
+;	call Music_DoLowHealthAlarm
+;	ld a, BANK(Audio1_UpdateMusic)
+;	call BankswitchCommon
+;	call Audio1_UpdateMusic
+
 	pop af
-	jp BankswitchCommon
+	call BankswitchCommon
+	ret
