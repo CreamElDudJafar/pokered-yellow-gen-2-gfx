@@ -30,6 +30,16 @@ PlayIntroScene:
 	call UpdateCGBPal_BGP
 	call UpdateCGBPal_OBP0
 	call UpdateCGBPal_OBP1
+
+IF DEF(_BLUE)
+	push de
+	ld d, CONVERT_OBP0
+	ld e, 0
+	ld a, MR_MIME ; makes Jigglypuff's sprite colors more pink compared to actual JigglyPuff color when used
+	ld [wCurPartySpecies], a
+	callfar TransferMonPal
+	pop de
+ENDC
 	xor a
 	ldh [hSCX], a
 	ld b, TILEMAP_GENGAR_INTRO_1
