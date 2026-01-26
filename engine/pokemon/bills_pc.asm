@@ -169,7 +169,9 @@ BillsPCMenu:
 	call PlaceString
 	ld a, 1
 	ldh [hAutoBGTransferEnabled], a
-	call PCBoxOWPal
+	call Delay3
+	ld b, SET_PAL_OVERWORLD
+	call RunPaletteCommand
 	call HandleMenuInput
 	bit B_PAD_B, a
 	jp nz, ExitBillsPC
