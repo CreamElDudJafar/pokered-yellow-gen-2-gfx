@@ -68,7 +68,6 @@ ROMX $8
 	"Bill's PC"
 	"Audio Engine 2"
 	"Music 2"
-	"Bill's PC 2"
 ROMX $9
 	"Pics 1"
 	"Battle Engine 3"
@@ -178,6 +177,8 @@ ROMX $2B
 	"Pokédex Text"
 ROMX $2C
 	"Move Names"
+ROMX $30
+	"CGB Mode Code"
 WRAM0
 	"Audio RAM"
 	org $c100

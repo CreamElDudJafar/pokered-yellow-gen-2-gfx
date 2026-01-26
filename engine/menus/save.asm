@@ -140,12 +140,11 @@ GoodCheckSum:
 	ld [rRAMG], a
 	ret
 
-TryLoadSaveFileIgnoreChecksum: ; unreferenced
-; don't update wSaveFileStatus upon success or failure
-; don't display warning in case of failed checksum
-	call LoadMainData
-	call LoadCurrentBoxData
-	jp LoadPartyAndDexData
+;LoadSAVIgnoreBadCheckSum:
+; unused function that loads save data and ignores bad checksums
+;	call LoadSAV0
+;	call LoadSAV1
+;	jp LoadSAV2
 
 SaveMenu:
 	farcall PrintSaveScreenText
@@ -454,7 +453,8 @@ DisplayChangeBoxMenu:
 	hlcoord 0, 0
 	ld b, 2
 	ld c, 9
-	call PCBoxPal
+	call TextBoxBorder
+	callfar SendPokeballPal
 	ld hl, ChooseABoxText
 	call PrintText
 	hlcoord 11, 0
