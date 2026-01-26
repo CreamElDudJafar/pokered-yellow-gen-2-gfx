@@ -140,11 +140,12 @@ GoodCheckSum:
 	ld [rRAMG], a
 	ret
 
-;LoadSAVIgnoreBadCheckSum:
-; unused function that loads save data and ignores bad checksums
-;	call LoadSAV0
-;	call LoadSAV1
-;	jp LoadSAV2
+;TryLoadSaveFileIgnoreChecksum: ; unreferenced
+; don't update wSaveFileStatus upon success or failure
+; don't display warning in case of failed checksum
+;	call LoadMainData
+;	call LoadCurrentBoxData
+;	jp LoadPartyAndDexData
 
 SaveMenu:
 	farcall PrintSaveScreenText
