@@ -108,7 +108,7 @@ StatusScreen:
 	call DrawLineBox ; Draws the box around name, HP and status
 	hlcoord 2, 7
 	nop
-	ld [hl], "<DOT>"
+	ld [hl], '<DOT>'
 	dec hl
 	ld [hl], '№'
 	hlcoord 19, 9
