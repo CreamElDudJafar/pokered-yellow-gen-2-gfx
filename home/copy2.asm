@@ -13,26 +13,44 @@ FarCopyData2::
 	ld [rROMB], a
 	ret
 
-FarCopyData3::
-; Copy bc bytes from a:de to hl.
+FarCopyData4::
 	ldh [hROMBankTemp], a
 	ldh a, [hLoadedROMBank]
 	push af
 	ldh a, [hROMBankTemp]
 	ldh [hLoadedROMBank], a
 	ld [rROMB], a
-	push hl
-	push de
-	push de
-	ld d, h
-	ld e, l
-	pop hl
-	call CopyData
-	pop de
-	pop hl
+	call CheckSpecialCopyData
 	pop af
 	ldh [hLoadedROMBank], a
 	ld [rROMB], a
+	ret
+
+CheckSpecialCopyData:
+	push af
+	ldh a, [hFlagsFFFA]
+	bit 3, a
+	jr nz, .specialCopy
+	pop af
+	call CopyData
+	ret
+.specialCopy
+	pop af
+
+SpecialCopyData:
+	di
+.waitVRAM
+	ldh a, [rSTAT]
+	and %10
+	jr nz, .waitVRAM
+	ld a, [hli]
+	ld [de], a
+	inc de
+	dec bc
+	ei
+	ld a, c
+	or b
+	jr nz, SpecialCopyData
 	ret
 
 FarCopyDataDouble::
