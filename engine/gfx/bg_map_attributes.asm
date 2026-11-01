@@ -104,7 +104,7 @@ LoadBGMapAttributes::
 	reti
 
 BGMapAttributesPointers:
-	dw BGMapAttributes_PikachusBeachTile
+	dw BGMapAttributes_PikachusBeachTitle
 	dw BGMapAttributes_PikachusPortrait
 	dw BGMapAttributes_GameFreakIntro
 	dw BGMapAttributes_TrainerCard

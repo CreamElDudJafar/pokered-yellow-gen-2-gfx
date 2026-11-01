@@ -1,4 +1,4 @@
-BGMapAttributes_PikachusBeachTile:
+BGMapAttributes_PikachusBeachTitle:
 	db $23
 	dw $000d
 	db $00
